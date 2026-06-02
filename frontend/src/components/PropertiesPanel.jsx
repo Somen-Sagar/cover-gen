@@ -169,6 +169,110 @@ export default function PropertiesPanel({
         />
       </Section>
 
+      <Section label="TEXT EFFECTS">
+
+  <Row>
+    <label>Opacity</label>
+
+    <input
+      type="range"
+      min="0"
+      max="1"
+      step="0.05"
+      value={element.opacity ?? 1}
+      onChange={(e) =>
+        update("opacity", Number(e.target.value))
+      }
+    />
+  </Row>
+
+  <Row>
+    <label>Letter</label>
+
+    <input
+      type="range"
+      min="-5"
+      max="20"
+      value={element.letterSpacing || 0}
+      onChange={(e) =>
+        update("letterSpacing", Number(e.target.value))
+      }
+    />
+  </Row>
+
+  <Row>
+    <label>Line</label>
+
+    <input
+      type="range"
+      min="0.8"
+      max="3"
+      step="0.1"
+      value={element.lineHeight || 1.2}
+      onChange={(e) =>
+        update("lineHeight", Number(e.target.value))
+      }
+    />
+  </Row>
+
+</Section>
+
+<Section label="OUTLINE">
+
+  <label>Stroke Color</label>
+
+  <input
+    type="color"
+    value={element.strokeColor || "#000000"}
+    onChange={(e) =>
+      update("strokeColor", e.target.value)
+    }
+    style={styles.color}
+  />
+
+  <label>Stroke Width</label>
+
+  <input
+    type="range"
+    min="0"
+    max="10"
+    value={element.strokeWidth || 0}
+    onChange={(e) =>
+      update("strokeWidth", Number(e.target.value))
+    }
+  />
+
+</Section>
+
+<Section label="ROTATION">
+
+  <input
+    type="range"
+    min="-180"
+    max="180"
+    value={element.rotation || 0}
+    onChange={(e) =>
+      update("rotation", Number(e.target.value))
+    }
+  />
+
+  <div>{element.rotation || 0}°</div>
+
+</Section>
+
+<Row>
+  <label>Width</label>
+
+  <input
+    type="range"
+    min="100"
+    max="700"
+    value={element.width || 400}
+    onChange={(e) =>
+      update("width", Number(e.target.value))
+    }
+  />
+</Row>
       {/* POSITION */}
       <Section label="POSITION">
         <Row>
@@ -208,28 +312,72 @@ export default function PropertiesPanel({
         </Row>
       </Section>
 
+      
       {/* SHADOW */}
-      <Section label="SHADOW">
-        <Row>
-          <IconBtn
-            active={element.shadow?.enabled}
-            onClick={() =>
-              updateShadow("enabled", !element.shadow?.enabled)
-            }
-          >
-            <Layers size={14} />
-          </IconBtn>
-        </Row>
+<Section label="SHADOW">
+  <Row>
+    <label>Enable</label>
 
-        {element.shadow?.enabled && (
-          <input
-            type="color"
-            value={element.shadow?.color || "#000000"}
-            onChange={(e) => updateShadow("color", e.target.value)}
-            style={styles.color}
-          />
-        )}
-      </Section>
+    <input
+      type="checkbox"
+      checked={element.shadow?.enabled || false}
+      onChange={(e) =>
+        updateShadow("enabled", e.target.checked)
+      }
+    />
+  </Row>
+
+  {element.shadow?.enabled && (
+    <>
+      <label>Color</label>
+
+      <input
+        type="color"
+        value={element.shadow?.color || "#000000"}
+        onChange={(e) =>
+          updateShadow("color", e.target.value)
+        }
+        style={styles.color}
+      />
+
+      <label>Blur</label>
+
+      <input
+        type="range"
+        min="0"
+        max="50"
+        value={element.shadow?.blur || 10}
+        onChange={(e) =>
+          updateShadow("blur", Number(e.target.value))
+        }
+      />
+
+      <label>Offset X</label>
+
+      <input
+        type="range"
+        min="-50"
+        max="50"
+        value={element.shadow?.offsetX || 0}
+        onChange={(e) =>
+          updateShadow("offsetX", Number(e.target.value))
+        }
+      />
+
+      <label>Offset Y</label>
+
+      <input
+        type="range"
+        min="-50"
+        max="50"
+        value={element.shadow?.offsetY || 0}
+        onChange={(e) =>
+          updateShadow("offsetY", Number(e.target.value))
+        }
+      />
+    </>
+  )}
+</Section>
     </div>
   );
 }
@@ -270,10 +418,19 @@ function IconBtn({ active, danger, onClick, children }) {
 
 const styles = {
   panel: {
-    padding: 14,
-    color: "#fff",
-    backdropFilter: "blur(14px)",
-  },
+  padding: 18,
+  color: "#fff",
+  height: "100%",
+  overflowY: "auto",
+
+  background:
+    "linear-gradient(180deg,#151521,#0f0f18)",
+
+  boxShadow:
+    "inset 0 0 30px rgba(255,255,255,0.03)",
+
+  backdropFilter: "blur(30px)",
+},
 
   header: {
     display: "flex",
@@ -293,9 +450,18 @@ const styles = {
     gap: 6,
   },
 
-  section: {
-    marginBottom: 18,
-  },
+ section: {
+  marginBottom: 20,
+  padding: 12,
+
+  background:
+    "rgba(255,255,255,0.03)",
+
+  border:
+    "1px solid rgba(255,255,255,0.05)",
+
+  borderRadius: 12,
+},
 
   label: {
     fontSize: 10,
@@ -310,15 +476,23 @@ const styles = {
     alignItems: "center",
   },
 
-  textarea: {
-    width: "100%",
-    height: 60,
-    background: "#111",
-    border: "1px solid #2a2a35",
-    color: "#fff",
-    padding: 8,
-    borderRadius: 6,
-  },
+textarea: {
+  width: "100%",
+  minHeight: 100,
+
+  background: "#0d0d14",
+
+  border:
+    "1px solid rgba(255,255,255,0.08)",
+
+  color: "#fff",
+
+  padding: 10,
+
+  borderRadius: 10,
+
+  resize: "vertical",
+},
 
   select: {
     width: "100%",

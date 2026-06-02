@@ -30,58 +30,7 @@ export default function App() {
   } = useHistory(null);
 
   /* ---------------- KEYBOARD ---------------- */
-  useEffect(() => {
-    const handler = (e) => {
-      const isCmd = e.ctrlKey || e.metaKey;
-
-      // UNDO / REDO
-      if (isCmd && e.key === "z") {
-        e.preventDefault();
-        undo();
-      }
-
-      if (isCmd && (e.key === "y" || (e.shiftKey && e.key === "z"))) {
-        e.preventDefault();
-        redo();
-      }
-
-      // DELETE ELEMENT
-      if (e.key === "Delete" && selectedId && layout) {
-        e.preventDefault();
-        handleDeleteSelected();
-      }
-
-      // ARROW MOVE (🔥 pro feature)
-      if (selectedId && layout) {
-        const step = e.shiftKey ? 10 : 2;
-
-        let dx = 0;
-        let dy = 0;
-
-        if (e.key === "ArrowUp") dy = -step;
-        if (e.key === "ArrowDown") dy = step;
-        if (e.key === "ArrowLeft") dx = -step;
-        if (e.key === "ArrowRight") dx = step;
-
-        if (dx || dy) {
-          e.preventDefault();
-
-          const el = layout.elements.find((e) => e.id === selectedId);
-          if (!el) return;
-
-          handleElementChange({
-            ...el,
-            x: el.x + dx,
-            y: el.y + dy,
-          });
-        }
-      }
-    };
-
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [undo, redo, selectedId, layout]);
-
+  
   /* ---------------- GENERATE ---------------- */
   const handleGenerate = useCallback(
     async (prompt) => {
@@ -136,6 +85,87 @@ export default function App() {
     [layout, push]
   );
 
+  /* ---------------- DUPLICATE ---------------- */
+const handleDuplicate = useCallback(() => {
+  if (!layout || !selectedId) return;
+
+  const original = layout.elements.find(
+    (el) => el.id === selectedId
+  );
+
+  if (!original) return;
+
+  const copy = {
+    ...original,
+    id: `text-${nextId++}`,
+    x:
+      typeof original.x === "number"
+        ? original.x + 20
+        : original.x,
+    y:
+      typeof original.y === "number"
+        ? original.y + 20
+        : original.y,
+  };
+
+  push({
+    ...layout,
+    elements: [...layout.elements, copy],
+  });
+
+  setSelectedId(copy.id);
+}, [layout, selectedId, push]);
+
+/* ---------------- BRING FORWARD ---------------- */
+const handleBringForward = useCallback(() => {
+  if (!layout || !selectedId) return;
+
+  const index = layout.elements.findIndex(
+    (el) => el.id === selectedId
+  );
+
+  if (
+    index === -1 ||
+    index === layout.elements.length - 1
+  )
+    return;
+
+  const elements = [...layout.elements];
+
+  [elements[index], elements[index + 1]] = [
+    elements[index + 1],
+    elements[index],
+  ];
+
+  push({
+    ...layout,
+    elements,
+  });
+}, [layout, selectedId, push]);
+
+/* ---------------- SEND BACKWARD ---------------- */
+const handleSendBackward = useCallback(() => {
+  if (!layout || !selectedId) return;
+
+  const index = layout.elements.findIndex(
+    (el) => el.id === selectedId
+  );
+
+  if (index <= 0) return;
+
+  const elements = [...layout.elements];
+
+  [elements[index], elements[index - 1]] = [
+    elements[index - 1],
+    elements[index],
+  ];
+
+  push({
+    ...layout,
+    elements,
+  });
+}, [layout, selectedId, push]);
+
   
 
   /* ---------------- ADD TEXT ---------------- */
@@ -171,29 +201,146 @@ export default function App() {
 
   /* ---------------- EXPORT ---------------- */
   const handleExport = useCallback(
-    (type) => {
-      if (!layout) return;
+  (type) => {
+    if (!layout) return;
 
-      if (type === "png" && stageRef.current) {
-        setSelectedId(null);
+    if (type === "png" && stageRef.current) {
+      setSelectedId(null);
 
-        setTimeout(() => {
-          const dataURL = stageRef.current.toDataURL({
-            pixelRatio: 2,
+      setTimeout(() => {
+        const dataURL =
+          stageRef.current.toDataURL({
+            pixelRatio: 4,
           });
 
-          const a = document.createElement("a");
-          a.href = dataURL;
-          a.download = "design.png";
-          a.click();
-        }, 80);
-      }
-    },
-    [layout]
-  );
+        const a =
+          document.createElement("a");
+
+        a.href = dataURL;
+        a.download = "cover.png";
+        a.click();
+      }, 100);
+    }
+
+    if (type === "json") {
+      const blob = new Blob(
+        [
+          JSON.stringify(
+            layout,
+            null,
+            2
+          ),
+        ],
+        {
+          type: "application/json",
+        }
+      );
+
+      const url =
+        URL.createObjectURL(blob);
+
+      const a =
+        document.createElement("a");
+
+      a.href = url;
+      a.download = "layout.json";
+      a.click();
+
+      URL.revokeObjectURL(url);
+    }
+  },
+  [layout]
+);
 
   const selectedElement =
     layout?.elements?.find((el) => el.id === selectedId) ?? null;
+
+
+    const handleNewBackground =
+  useCallback(async () => {
+    if (!layout) return;
+
+    try {
+      setBgLoading(true);
+
+      const seed = Math.floor(
+        Math.random() * 999999
+      );
+
+      const imageUrl =
+        `https://image.pollinations.ai/prompt/book%20cover%20background?seed=${seed}`;
+
+      push({
+        ...layout,
+        background: {
+          ...layout.background,
+          imageUrl,
+        },
+      });
+    } finally {
+      setBgLoading(false);
+    }
+  }, [layout, push]);
+
+
+  useEffect(() => {
+    const handler = (e) => {
+      const isCmd = e.ctrlKey || e.metaKey;
+
+      // UNDO / REDO
+      if (isCmd && e.key === "z") {
+        e.preventDefault();
+        undo();
+      }
+
+      if (isCmd && (e.key === "y" || (e.shiftKey && e.key === "z"))) {
+        e.preventDefault();
+        redo();
+      }
+
+      // DELETE ELEMENT
+      if (e.key === "Delete" && selectedId && layout) {
+        e.preventDefault();
+        handleDeleteSelected();
+      }
+
+      // ARROW MOVE (🔥 pro feature)
+      if (selectedId && layout) {
+        const step = e.shiftKey ? 10 : 2;
+
+        let dx = 0;
+        let dy = 0;
+
+        if (e.key === "ArrowUp") dy = -step;
+        if (e.key === "ArrowDown") dy = step;
+        if (e.key === "ArrowLeft") dx = -step;
+        if (e.key === "ArrowRight") dx = step;
+
+        if (dx || dy) {
+          e.preventDefault();
+
+          const el = layout.elements.find((e) => e.id === selectedId);
+          if (!el) return;
+
+          handleElementChange({
+            ...el,
+            x: el.x + dx,
+            y: el.y + dy,
+          });
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+}, [
+  undo,
+  redo,
+  selectedId,
+  layout,
+  handleDeleteSelected,
+  handleElementChange,
+]);
 
   return (
     <div style={styles.root}>
@@ -216,7 +363,7 @@ export default function App() {
         canRedo={canRedo}
         onExport={handleExport}
         onAddText={handleAddText}
-        onNewBg={() => {}}
+        onNewBg={handleNewBackground}
         hasLayout={!!layout}
         bgLoading={bgLoading}
       />
@@ -251,10 +398,13 @@ export default function App() {
         {/* RIGHT */}
         <aside style={styles.sidebarRight}>
           <PropertiesPanel
-            element={selectedElement}
-            onChange={handleElementChange}
-            onDelete={handleDeleteSelected}
-          />
+  element={selectedElement}
+  onChange={handleElementChange}
+  onDelete={handleDeleteSelected}
+  onDuplicate={handleDuplicate}
+  onBringForward={handleBringForward}
+  onSendBackward={handleSendBackward}
+/>
         </aside>
       </div>
 
