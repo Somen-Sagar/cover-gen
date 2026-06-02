@@ -114,12 +114,43 @@ const withTimeout = (promise, ms = 8000) => {
 -------------------------------------------------- */
 
 function buildImageUrl(prompt, seed) {
-  const imagePrompt =
-    `${prompt}, cinematic background, ultra HD, smooth lighting, modern design, no text`;
+const imagePrompt = `
+${prompt},
+
+cinematic sci-fi environment,
+digital painting,
+concept art,
+background artwork,
+empty space for title placement,
+no typography,
+no text,
+no letters
+cinematic illustration,
+full background artwork,
+highly detailed,
+dramatic lighting,
+clean composition,
+
+EMPTY DESIGN SPACE,
+NO WRITING,
+NO TYPOGRAPHY,
+NO LETTERS,
+NO WORDS,
+NO TITLE,
+NO AUTHOR NAME,
+NO LOGO,
+NO WATERMARK,
+NO MAGAZINE COVER,
+NO BOOK COVER,
+NO POSTER,
+NO TEXT ANYWHERE,
+TEXT FREE IMAGE,
+PURE ARTWORK ONLY
+`;
 
   return `https://image.pollinations.ai/prompt/${encodeURIComponent(
     imagePrompt
-  )}?width=1024&height=1024&seed=${seed}`;
+  )}?width=1600&height=900&seed=${seed}`;
 }
 
 /* --------------------------------------------------
@@ -156,23 +187,16 @@ function parseLayout(text) {
 -------------------------------------------------- */
 
 function validateLayout(layout) {
-  if (!layout || typeof layout !== "object") {
-    return false;
-  }
+  if (!layout) return false;
 
-  if (!layout.background) {
-    return false;
-  }
+  if (!layout.background) return false;
 
-  if (!Array.isArray(layout.elements)) {
-    return false;
-  }
+  if (!Array.isArray(layout.elements)) return false;
 
   return layout.elements.every(
     (el) =>
-      typeof el.text === "string" &&
-      typeof el.x === "number" &&
-      typeof el.y === "number"
+      typeof el.id === "string" &&
+      typeof el.text === "string"
   );
 }
 
@@ -193,38 +217,62 @@ function normalizeLayout(layout) {
     layout.elements = [];
   }
 
-  if (layout.elements.length === 0) {
-    layout.elements.push({
-      id: "title",
-      text: "Your Title",
-      x: 200,
-      y: 300,
-      fontSize: 64,
-      fontFamily: "Montserrat",
-      color: "#ffffff",
-      width: 600,
-    });
-  }
+  layout.elements = layout.elements.map((el, index) => ({
+    id: el.id || `el-${index + 1}`,
+    type: el.type || "text",
 
-  layout.elements = layout.elements.map(
-    (el, index) => ({
-      id: el.id || `el-${index}`,
-      text: el.text || "Text",
-      x:
-        typeof el.x === "number"
-          ? el.x
-          : 150,
-      y:
-        typeof el.y === "number"
-          ? el.y
-          : 150 + index * 80,
-      fontSize: el.fontSize || 36,
-      fontFamily:
-        el.fontFamily || "Montserrat",
-      color: el.color || "#ffffff",
-      width: el.width || 500,
-    })
-  );
+    text: el.text || "Text",
+
+    x: el.x ?? 100,
+    y: el.y ?? 100 + index * 80,
+
+    width: el.width ?? 500,
+
+    fontSize: el.fontSize ?? 32,
+    fontFamily: el.fontFamily || "Montserrat",
+
+    fontWeight: el.fontWeight || "normal",
+    fontStyle: el.fontStyle || "normal",
+
+    color: el.color || "#ffffff",
+
+    opacity: el.opacity ?? 1,
+
+    rotation: el.rotation ?? 0,
+
+    letterSpacing: el.letterSpacing ?? 0,
+    lineHeight: el.lineHeight ?? 1.2,
+
+    visible: el.visible ?? true,
+    locked: el.locked ?? false,
+
+    stroke: el.stroke || "#000000",
+    strokeWidth: el.strokeWidth ?? 0,
+
+    shadow: {
+      enabled: el.shadow?.enabled ?? false,
+      color: el.shadow?.color ?? "#000000",
+      blur: el.shadow?.blur ?? 10,
+      offsetX: el.shadow?.offsetX ?? 4,
+      offsetY: el.shadow?.offsetY ?? 4,
+      opacity: el.shadow?.opacity ?? 0.5,
+    },
+  }));
+
+  if (layout.elements.length === 0) {
+    layout.elements = [
+      {
+        id: "el-1",
+        type: "text",
+        text: "Your Design",
+        x: 100,
+        y: 100,
+        width: 600,
+        fontSize: 72,
+        color: "#ffffff",
+      },
+    ];
+  }
 
   return layout;
 }
@@ -315,29 +363,55 @@ app.post(
                 {
                   role: "system",
                   content: `
-You are a STRICT JSON layout generator.
+You are an expert Canva designer.
 
-Rules:
-- Output ONLY JSON
-- No explanation
-- Max 3 elements
+Return ONLY valid JSON.
 
-Schema:
+Create 4-8 independent text elements.
+
+Every piece of text must be a separate element.
+
+Example:
+
 {
   "background": {
-    "gradient": "string"
+    "gradient": "linear-gradient(135deg,#111,#222)"
   },
   "elements": [
     {
-      "id": "string",
-      "text": "string",
-      "x": number,
-      "y": number,
-      "fontSize": number,
-      "color": "string"
+      "id":"el-1",
+      "type":"text",
+      "text":"THE FUTURE",
+      "x":100,
+      "y":80,
+      "width":600,
+      "fontSize":72,
+      "fontWeight":"bold",
+      "color":"#ffffff"
+    },
+    {
+      "id":"el-2",
+      "type":"text",
+      "text":"OF AI",
+      "x":100,
+      "y":170,
+      "width":600,
+      "fontSize":72,
+      "fontWeight":"bold",
+      "color":"#ffffff"
     }
   ]
 }
+
+Rules:
+
+- create 4-8 text blocks
+- never use title/subtitle/author
+- every phrase separate
+- make layout visually attractive
+- vary font sizes
+- include positioning
+- output JSON only
 `,
                 },
                 {
