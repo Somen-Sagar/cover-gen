@@ -72,3 +72,28 @@ input, textarea {
 .toolbar-btn:active {
   transform: scale(0.96);
 }
+
+input[type="range"] {
+  accent-color: #8b5cf6;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+button {
+  transition: all .25s ease;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.12);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

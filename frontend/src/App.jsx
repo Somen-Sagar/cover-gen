@@ -19,298 +19,32 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [error, setError] = useState(null);
 
-  const {
-    current: layout,
-    push,
-    undo,
-    redo,
-    canUndo,
-    canRedo,
-    reset,
-  } = useHistory(null);
+  const { current: layout, push, undo, redo, canUndo, canRedo, reset } =
+    useHistory(null);
 
-  /* ---------------- KEYBOARD ---------------- */
-  
-  /* ---------------- GENERATE ---------------- */
-  const handleGenerate = useCallback(
-    async (prompt) => {
-      setLoading(true);
-      setError(null);
-      setSelectedId(null);
-
-      try {
-        const result = await generateLayout(prompt);
-        reset(result);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [reset]
-  );
-
-  /* ---------------- REFINE ---------------- */
-  const handleRefine = useCallback(
-    async (instruction) => {
-      if (!layout) return;
-
-      setRefining(true);
-      setError(null);
-
-      try {
-        const result = await refineLayout(layout, instruction);
-        push(result);
-      } catch (e) {
-        setError(e.message);
-      } finally {
-        setRefining(false);
-      }
-    },
-    [layout, push]
-  );
-
-  /* ---------------- ELEMENT CHANGE ---------------- */
-  const handleElementChange = useCallback(
-    (updatedEl) => {
-      if (!layout) return;
-
-      push({
-        ...layout,
-        elements: layout.elements.map((el) =>
-          el.id === updatedEl.id ? updatedEl : el
-        ),
-      });
-    },
-    [layout, push]
-  );
-
-  /* ---------------- DUPLICATE ---------------- */
-const handleDuplicate = useCallback(() => {
-  if (!layout || !selectedId) return;
-
-  const original = layout.elements.find(
-    (el) => el.id === selectedId
-  );
-
-  if (!original) return;
-
-  const copy = {
-    ...original,
-    id: `text-${nextId++}`,
-    x:
-      typeof original.x === "number"
-        ? original.x + 20
-        : original.x,
-    y:
-      typeof original.y === "number"
-        ? original.y + 20
-        : original.y,
-  };
-
-  push({
-    ...layout,
-    elements: [...layout.elements, copy],
-  });
-
-  setSelectedId(copy.id);
-}, [layout, selectedId, push]);
-
-/* ---------------- BRING FORWARD ---------------- */
-const handleBringForward = useCallback(() => {
-  if (!layout || !selectedId) return;
-
-  const index = layout.elements.findIndex(
-    (el) => el.id === selectedId
-  );
-
-  if (
-    index === -1 ||
-    index === layout.elements.length - 1
-  )
-    return;
-
-  const elements = [...layout.elements];
-
-  [elements[index], elements[index + 1]] = [
-    elements[index + 1],
-    elements[index],
-  ];
-
-  push({
-    ...layout,
-    elements,
-  });
-}, [layout, selectedId, push]);
-
-/* ---------------- SEND BACKWARD ---------------- */
-const handleSendBackward = useCallback(() => {
-  if (!layout || !selectedId) return;
-
-  const index = layout.elements.findIndex(
-    (el) => el.id === selectedId
-  );
-
-  if (index <= 0) return;
-
-  const elements = [...layout.elements];
-
-  [elements[index], elements[index - 1]] = [
-    elements[index - 1],
-    elements[index],
-  ];
-
-  push({
-    ...layout,
-    elements,
-  });
-}, [layout, selectedId, push]);
-
-  
-
-  /* ---------------- ADD TEXT ---------------- */
-  const handleAddText = useCallback(() => {
-    if (!layout) return;
-
-    const el = {
-      id: `text-${nextId++}`,
-      text: "New Text",
-      x: 120,
-      y: 120,
-      fontSize: 42,
-      fontFamily: "Montserrat",
-      color: "#ffffff",
-      width: 500,
-    };
-
-    push({ ...layout, elements: [...layout.elements, el] });
-    setSelectedId(el.id);
-  }, [layout, push]);
-
-  /* ---------------- DELETE ---------------- */
-  const handleDeleteSelected = useCallback(() => {
-    if (!layout || !selectedId) return;
-
-    push({
-      ...layout,
-      elements: layout.elements.filter((el) => el.id !== selectedId),
-    });
-
-    setSelectedId(null);
-  }, [layout, selectedId, push]);
-
-  /* ---------------- EXPORT ---------------- */
-  const handleExport = useCallback(
-  (type) => {
-    if (!layout) return;
-
-    if (type === "png" && stageRef.current) {
-      setSelectedId(null);
-
-      setTimeout(() => {
-        const dataURL =
-          stageRef.current.toDataURL({
-            pixelRatio: 4,
-          });
-
-        const a =
-          document.createElement("a");
-
-        a.href = dataURL;
-        a.download = "cover.png";
-        a.click();
-      }, 100);
-    }
-
-    if (type === "json") {
-      const blob = new Blob(
-        [
-          JSON.stringify(
-            layout,
-            null,
-            2
-          ),
-        ],
-        {
-          type: "application/json",
-        }
-      );
-
-      const url =
-        URL.createObjectURL(blob);
-
-      const a =
-        document.createElement("a");
-
-      a.href = url;
-      a.download = "layout.json";
-      a.click();
-
-      URL.revokeObjectURL(url);
-    }
-  },
-  [layout]
-);
-
-  const selectedElement =
-    layout?.elements?.find((el) => el.id === selectedId) ?? null;
-
-
-    const handleNewBackground =
-  useCallback(async () => {
-    if (!layout) return;
-
-    try {
-      setBgLoading(true);
-
-      const seed = Math.floor(
-        Math.random() * 999999
-      );
-
-      const imageUrl =
-        `https://image.pollinations.ai/prompt/book%20cover%20background?seed=${seed}`;
-
-      push({
-        ...layout,
-        background: {
-          ...layout.background,
-          imageUrl,
-        },
-      });
-    } finally {
-      setBgLoading(false);
-    }
-  }, [layout, push]);
-
-
+  /* --------------------------------------------------
+     KEYBOARD SHORTCUTS
+  -------------------------------------------------- */
   useEffect(() => {
     const handler = (e) => {
+      const tag = document.activeElement?.tagName;
+      const isTyping = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+
       const isCmd = e.ctrlKey || e.metaKey;
 
-      // UNDO / REDO
-      if (isCmd && e.key === "z") {
-        e.preventDefault();
-        undo();
-      }
+      if (isCmd && e.key === "z") { e.preventDefault(); undo(); return; }
+      if (isCmd && (e.key === "y" || (e.shiftKey && e.key === "z"))) { e.preventDefault(); redo(); return; }
 
-      if (isCmd && (e.key === "y" || (e.shiftKey && e.key === "z"))) {
-        e.preventDefault();
-        redo();
-      }
-
-      // DELETE ELEMENT
-      if (e.key === "Delete" && selectedId && layout) {
+      if (!isTyping && (e.key === "Delete" || e.key === "Backspace") && selectedId && layout) {
         e.preventDefault();
         handleDeleteSelected();
+        return;
       }
 
-      // ARROW MOVE (🔥 pro feature)
-      if (selectedId && layout) {
+      // Arrow key nudge
+      if (!isTyping && selectedId && layout) {
         const step = e.shiftKey ? 10 : 2;
-
-        let dx = 0;
-        let dy = 0;
-
+        let dx = 0, dy = 0;
         if (e.key === "ArrowUp") dy = -step;
         if (e.key === "ArrowDown") dy = step;
         if (e.key === "ArrowLeft") dx = -step;
@@ -318,29 +52,192 @@ const handleSendBackward = useCallback(() => {
 
         if (dx || dy) {
           e.preventDefault();
-
           const el = layout.elements.find((e) => e.id === selectedId);
           if (!el) return;
-
-          handleElementChange({
-            ...el,
-            x: el.x + dx,
-            y: el.y + dy,
-          });
+          handleElementChange({ ...el, x: el.x + dx, y: el.y + dy });
         }
       }
     };
 
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-}, [
-  undo,
-  redo,
-  selectedId,
-  layout,
-  handleDeleteSelected,
-  handleElementChange,
-]);
+  }, [undo, redo, selectedId, layout]);
+
+  /* --------------------------------------------------
+     GENERATE
+  -------------------------------------------------- */
+  const handleGenerate = useCallback(async (prompt) => {
+    setLoading(true);
+    setError(null);
+    setSelectedId(null);
+    try {
+      const result = await generateLayout(prompt);
+      reset(result);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [reset]);
+
+  /* --------------------------------------------------
+     REFINE
+  -------------------------------------------------- */
+  const handleRefine = useCallback(async (instruction) => {
+    if (!layout) return;
+    setRefining(true);
+    setError(null);
+    try {
+      const result = await refineLayout(layout, instruction);
+      push(result);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setRefining(false);
+    }
+  }, [layout, push]);
+
+  /* --------------------------------------------------
+     NEW BACKGROUND IMAGE
+  -------------------------------------------------- */
+  const handleNewBg = useCallback(async () => {
+    if (!layout) return;
+    setBgLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("http://localhost:4000/api/regenerate-bg", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imagePrompt: layout.background?.imagePrompt || "cinematic abstract professional background",
+        }),
+      });
+      const data = await res.json();
+      if (data.imageUrl) {
+        push({
+          ...layout,
+          background: { ...layout.background, imageUrl: data.imageUrl, seed: data.seed },
+        });
+      }
+    } catch (e) {
+      setError("Failed to regenerate background");
+    } finally {
+      setBgLoading(false);
+    }
+  }, [layout, push]);
+
+  /* --------------------------------------------------
+     ELEMENT CHANGE
+  -------------------------------------------------- */
+  const handleElementChange = useCallback((updatedEl) => {
+    if (!layout) return;
+    push({
+      ...layout,
+      elements: layout.elements.map((el) =>
+        el.id === updatedEl.id ? updatedEl : el
+      ),
+    });
+  }, [layout, push]);
+
+  /* --------------------------------------------------
+     LAYER ORDER
+  -------------------------------------------------- */
+  const handleBringForward = useCallback(() => {
+    if (!layout || !selectedId) return;
+    const idx = layout.elements.findIndex((e) => e.id === selectedId);
+    if (idx >= layout.elements.length - 1) return;
+    const els = [...layout.elements];
+    [els[idx], els[idx + 1]] = [els[idx + 1], els[idx]];
+    push({ ...layout, elements: els });
+  }, [layout, selectedId, push]);
+
+  const handleSendBackward = useCallback(() => {
+    if (!layout || !selectedId) return;
+    const idx = layout.elements.findIndex((e) => e.id === selectedId);
+    if (idx <= 0) return;
+    const els = [...layout.elements];
+    [els[idx], els[idx - 1]] = [els[idx - 1], els[idx]];
+    push({ ...layout, elements: els });
+  }, [layout, selectedId, push]);
+
+  /* --------------------------------------------------
+     DUPLICATE
+  -------------------------------------------------- */
+  const handleDuplicate = useCallback(() => {
+    if (!layout || !selectedId) return;
+    const el = layout.elements.find((e) => e.id === selectedId);
+    if (!el) return;
+    const copy = { ...el, id: `text-${nextId++}`, x: el.x + 20, y: el.y + 20 };
+    push({ ...layout, elements: [...layout.elements, copy] });
+    setSelectedId(copy.id);
+  }, [layout, selectedId, push]);
+
+  /* --------------------------------------------------
+     ADD TEXT
+  -------------------------------------------------- */
+  const handleAddText = useCallback(() => {
+    if (!layout) return;
+    const el = {
+      id: `text-${nextId++}`,
+      type: "text",
+      text: "New Text",
+      x: 120,
+      y: 120,
+      fontSize: 42,
+      fontFamily: "Montserrat",
+      fontWeight: "bold",
+      fontStyle: "normal",
+      color: "#ffffff",
+      width: 500,
+      opacity: 1,
+      rotation: 0,
+      letterSpacing: 0,
+      lineHeight: 1.2,
+      strokeColor: "#000000",
+      strokeWidth: 0,
+      shadow: { enabled: false, color: "#000000", blur: 10, offsetX: 4, offsetY: 4 },
+    };
+    push({ ...layout, elements: [...layout.elements, el] });
+    setSelectedId(el.id);
+  }, [layout, push]);
+
+  /* --------------------------------------------------
+     DELETE
+  -------------------------------------------------- */
+  const handleDeleteSelected = useCallback(() => {
+    if (!layout || !selectedId) return;
+    push({ ...layout, elements: layout.elements.filter((el) => el.id !== selectedId) });
+    setSelectedId(null);
+  }, [layout, selectedId, push]);
+
+  /* --------------------------------------------------
+     EXPORT
+  -------------------------------------------------- */
+  const handleExport = useCallback((type) => {
+    if (!layout) return;
+
+    if (type === "json") {
+      const blob = new Blob([JSON.stringify(layout, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "cover-layout.json";
+      a.click();
+      return;
+    }
+
+    if (type === "png" && stageRef.current) {
+      setSelectedId(null);
+      setTimeout(() => {
+        const dataURL = stageRef.current.toDataURL({ pixelRatio: 2 });
+        const a = document.createElement("a");
+        a.href = dataURL;
+        a.download = "cover-page.png";
+        a.click();
+      }, 100);
+    }
+  }, [layout]);
+
+  const selectedElement = layout?.elements?.find((el) => el.id === selectedId) ?? null;
 
   return (
     <div style={styles.root}>
@@ -349,9 +246,13 @@ const handleSendBackward = useCallback(() => {
         <div style={styles.logo}>
           <span style={styles.logoIcon}>✦</span>
           <span style={styles.logoText}>CoverGen</span>
+          <span style={styles.badge}>Groq + Pollinations</span>
         </div>
-
-        {error && <div style={styles.error}>⚠ {error}</div>}
+        {error && (
+          <div style={styles.error} onClick={() => setError(null)}>
+            ⚠ {error} <span style={{ opacity: 0.5 }}>✕</span>
+          </div>
+        )}
       </header>
 
       <PromptBar onGenerate={handleGenerate} loading={loading} />
@@ -363,7 +264,7 @@ const handleSendBackward = useCallback(() => {
         canRedo={canRedo}
         onExport={handleExport}
         onAddText={handleAddText}
-        onNewBg={handleNewBackground}
+        onNewBg={handleNewBg}
         hasLayout={!!layout}
         bgLoading={bgLoading}
       />
@@ -387,7 +288,6 @@ const handleSendBackward = useCallback(() => {
             onElementChange={handleElementChange}
             stageRef={stageRef}
           />
-
           <RefinePanel
             onRefine={handleRefine}
             loading={refining}
@@ -398,23 +298,24 @@ const handleSendBackward = useCallback(() => {
         {/* RIGHT */}
         <aside style={styles.sidebarRight}>
           <PropertiesPanel
-  element={selectedElement}
-  onChange={handleElementChange}
-  onDelete={handleDeleteSelected}
-  onDuplicate={handleDuplicate}
-  onBringForward={handleBringForward}
-  onSendBackward={handleSendBackward}
-/>
+            element={selectedElement}
+            onChange={handleElementChange}
+            onDelete={handleDeleteSelected}
+            onDuplicate={handleDuplicate}
+            onBringForward={handleBringForward}
+            onSendBackward={handleSendBackward}
+          />
         </aside>
       </div>
 
-      {/* LOADING */}
+      {/* LOADING OVERLAY */}
       {loading && (
         <div style={styles.overlay}>
           <div style={styles.loaderCard}>
             <div className="spinner" />
-            <h2>Designing...</h2>
-            <p>AI is crafting your layout</p>
+            <h2 style={{ margin: "12px 0 4px" }}>Designing…</h2>
+            <p style={{ color: "#888", margin: 0, fontSize: 13 }}>AI is crafting your layout</p>
+            <p style={{ color: "#555", margin: "4px 0 0", fontSize: 12 }}>Background image will load after</p>
           </div>
         </div>
       )}
@@ -422,8 +323,9 @@ const handleSendBackward = useCallback(() => {
   );
 }
 
-/* ---------------- STYLES ---------------- */
-
+/* --------------------------------------------------
+   STYLES
+-------------------------------------------------- */
 const styles = {
   root: {
     height: "100vh",
@@ -431,62 +333,54 @@ const styles = {
     flexDirection: "column",
     background: "radial-gradient(circle at top, #12121a, #0c0c0f)",
     color: "#fff",
+    overflow: "hidden",
   },
-
   topbar: {
     display: "flex",
     justifyContent: "space-between",
-    padding: "14px 22px",
+    alignItems: "center",
+    padding: "12px 22px",
     borderBottom: "1px solid rgba(255,255,255,0.06)",
     background: "rgba(20,20,30,0.6)",
     backdropFilter: "blur(10px)",
   },
-
-  logo: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
+  logo: { display: "flex", alignItems: "center", gap: 10 },
+  logoIcon: { color: "#7c6af7", fontSize: 20 },
+  logoText: { fontWeight: 700, fontSize: 16 },
+  badge: {
+    fontSize: 10,
+    background: "rgba(124,106,247,0.15)",
+    border: "1px solid rgba(124,106,247,0.3)",
+    color: "#9080e0",
+    padding: "2px 8px",
+    borderRadius: 20,
+    fontWeight: 600,
   },
-
-  logoIcon: {
-    color: "#7c6af7",
-    fontSize: 20,
-  },
-
-  logoText: {
-    fontWeight: 700,
-    fontSize: 16,
-  },
-
   error: {
     color: "#ff6b81",
     fontSize: 12,
-  },
-
-  main: {
+    cursor: "pointer",
+    background: "rgba(255,107,129,0.1)",
+    border: "1px solid rgba(255,107,129,0.25)",
+    padding: "4px 12px",
+    borderRadius: 8,
     display: "flex",
-    flex: 1,
-    overflow: "hidden",
+    gap: 8,
   },
-
+  main: { display: "flex", flex: 1, overflow: "hidden" },
   sidebarLeft: {
     width: 220,
     background: "rgba(20,20,30,0.6)",
     borderRight: "1px solid rgba(255,255,255,0.05)",
+    overflowY: "auto",
   },
-
   sidebarRight: {
     width: 260,
     background: "rgba(20,20,30,0.6)",
     borderLeft: "1px solid rgba(255,255,255,0.05)",
+    overflowY: "auto",
   },
-
-  center: {
-    flex: 1,
-    display: "flex",
-    flexDirection: "column",
-  },
-
+  center: { flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" },
   overlay: {
     position: "fixed",
     inset: 0,
@@ -495,8 +389,8 @@ const styles = {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    zIndex: 999,
   },
-
   loaderCard: {
     background: "#1e1e2a",
     padding: 40,

@@ -12,187 +12,197 @@ export default function Toolbar({
   bgLoading,
 }) {
   return (
-    <div style={styles.bar}>
-      {/* LEFT ACTIONS */}
-      <div style={styles.group}>
-        <TBtn onClick={onUndo} disabled={!canUndo} title="Undo (Ctrl+Z)">
-          ↩
-        </TBtn>
-        <TBtn onClick={onRedo} disabled={!canRedo} title="Redo (Ctrl+Y)">
-          ↪
-        </TBtn>
-      </div>
+    <div style={styles.wrapper}>
+      <div style={styles.toolbar}>
+        {/* LEFT */}
+        <div style={styles.section}>
+          <IconBtn
+            icon="↶"
+            onClick={onUndo}
+            disabled={!canUndo}
+          />
 
-      <Divider />
+          <IconBtn
+            icon="↷"
+            onClick={onRedo}
+            disabled={!canRedo}
+          />
+        </div>
 
-      {/* CENTER ACTIONS */}
-      <div style={styles.group}>
-        <TBtn onClick={onAddText} disabled={!hasLayout} title="Add text">
-          ✍️ Text
-        </TBtn>
+        {/* CENTER */}
+        <div style={styles.section}>
+          <ActionBtn
+            icon="T"
+            text="Text"
+            onClick={onAddText}
+            disabled={!hasLayout}
+          />
 
-        <TBtn
-          onClick={onNewBg}
-          disabled={!hasLayout || bgLoading}
-          glow
-          title="Generate new background"
-        >
-          {bgLoading ? (
-            <div style={styles.loadingWrap}>
-              <span style={styles.spinner} />
-              Generating...
-            </div>
-          ) : (
-            "🎨 New BG"
-          )}
-        </TBtn>
-      </div>
+          <ActionBtn
+            icon="✨"
+            text={
+              bgLoading
+                ? "Generating..."
+                : "New Background"
+            }
+            onClick={onNewBg}
+            disabled={!hasLayout || bgLoading}
+            primary
+          />
+        </div>
 
-      <Divider />
+        {/* RIGHT */}
+        <div style={styles.section}>
+          <ActionBtn
+            icon="⬇"
+            text="PNG"
+            onClick={() => onExport("png")}
+            disabled={!hasLayout}
+          />
 
-      {/* RIGHT ACTIONS */}
-      <div style={styles.group}>
-        <TBtn
-          onClick={() => onExport("png")}
-          disabled={!hasLayout}
-          accent
-          title="Export PNG"
-        >
-          ⬇ PNG
-        </TBtn>
-
-        <TBtn
-          onClick={() => onExport("json")}
-          disabled={!hasLayout}
-          title="Export JSON"
-        >
-          ⬇ JSON
-        </TBtn>
+          <ActionBtn
+            icon="{}"
+            text="JSON"
+            onClick={() => onExport("json")}
+            disabled={!hasLayout}
+          />
+        </div>
       </div>
     </div>
   );
 }
 
-/* ---------------- BUTTON ---------------- */
-
-function TBtn({ children, onClick, disabled, title, accent, glow }) {
+function IconBtn({
+  icon,
+  onClick,
+  disabled,
+}) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
-      title={title}
       style={{
-        ...styles.btn,
-        ...(accent && styles.accentBtn),
-        ...(glow && styles.glowBtn),
+        ...styles.iconBtn,
         opacity: disabled ? 0.4 : 1,
-        cursor: disabled ? "not-allowed" : "pointer",
       }}
-      className="toolbar-btn"
     >
-      {children}
+      {icon}
     </button>
   );
 }
 
-/* ---------------- DIVIDER ---------------- */
-
-function Divider() {
-  return <div style={styles.divider} />;
+function ActionBtn({
+  icon,
+  text,
+  onClick,
+  disabled,
+  primary,
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        ...styles.actionBtn,
+        ...(primary
+          ? styles.primaryBtn
+          : {}),
+        opacity: disabled ? 0.4 : 1,
+      }}
+    >
+      <span>{icon}</span>
+      <span>{text}</span>
+    </button>
+  );
 }
 
-/* ---------------- STYLES ---------------- */
-
 const styles = {
-  bar: {
+  wrapper: {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    padding: "12px 20px",
-    background: "rgba(18,18,28,0.75)",
-    backdropFilter: "blur(16px)",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-    boxShadow: "0 8px 30px rgba(0,0,0,0.5)",
-    position: "sticky",
-    top: 0,
-    zIndex: 100,
+    justifyContent: "center",
+    padding: "14px",
   },
 
-  group: {
+  toolbar: {
+    display: "flex",
+    alignItems: "center",
+    gap: 16,
+
+    padding: "10px 14px",
+
+    borderRadius: 999,
+
+    background:
+      "rgba(20,20,30,0.75)",
+
+    backdropFilter: "blur(20px)",
+
+    border:
+      "1px solid rgba(255,255,255,0.08)",
+
+    boxShadow:
+      "0 20px 60px rgba(0,0,0,0.45)",
+  },
+
+  section: {
+    display: "flex",
+    gap: 10,
+    alignItems: "center",
+  },
+
+  iconBtn: {
+    width: 42,
+    height: 42,
+
+    borderRadius: 14,
+
+    border:
+      "1px solid rgba(255,255,255,0.08)",
+
+    background:
+      "rgba(255,255,255,0.04)",
+
+    color: "white",
+
+    fontSize: 18,
+    cursor: "pointer",
+
+    transition: "0.25s",
+  },
+
+  actionBtn: {
     display: "flex",
     alignItems: "center",
     gap: 8,
-  },
 
-  divider: {
-    width: 1,
-    height: 24,
-    background: "rgba(255,255,255,0.08)",
-    margin: "0 10px",
-  },
+    padding: "0 18px",
 
-  btn: {
-    padding: "8px 16px",
-    borderRadius: 12,
-    fontSize: 13,
-    fontWeight: 600,
-    fontFamily: "Inter, sans-serif",
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-    border: "1px solid rgba(255,255,255,0.08)",
-    background: "rgba(255,255,255,0.04)",
-    color: "#e6e6ff",
-    transition: "all 0.25s ease",
-  },
+    height: 42,
 
-  accentBtn: {
-    background: "linear-gradient(135deg,#7c5cff,#ff6fa5)",
-    border: "none",
+    borderRadius: 14,
+
+    border:
+      "1px solid rgba(255,255,255,0.08)",
+
+    background:
+      "rgba(255,255,255,0.04)",
+
     color: "#fff",
-    boxShadow: "0 6px 20px rgba(124,92,255,0.4)",
+
+    fontWeight: 600,
+
+    cursor: "pointer",
+
+    transition: "0.25s",
   },
 
-  glowBtn: {
-    boxShadow: "0 0 18px rgba(124,92,255,0.35)",
-  },
+  primaryBtn: {
+    background:
+      "linear-gradient(135deg,#7c6af7,#b16eff)",
 
-  loadingWrap: {
-    display: "flex",
-    alignItems: "center",
-    gap: 6,
-  },
+    border: "none",
 
-  spinner: {
-    width: 14,
-    height: 14,
-    border: "2px solid rgba(255,255,255,0.3)",
-    borderTop: "2px solid white",
-    borderRadius: "50%",
-    animation: "spin 0.8s linear infinite",
+    boxShadow:
+      "0 10px 35px rgba(124,106,247,.45)",
   },
 };
-
-/* ---------------- GLOBAL CSS ---------------- */
-
-/* Add this in your global CSS file */
-// const styleSheet = document.styleSheets[0];
-// const keyframes = `
-// @keyframes spin {
-//   from { transform: rotate(0deg); }
-//   to { transform: rotate(360deg); }
-// }
-
-// .toolbar-btn:hover {
-//   transform: translateY(-2px) scale(1.02);
-//   box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-// }
-
-// .toolbar-btn:active {
-//   transform: scale(0.96);
-// }
-// `;
-
-// if (styleSheet) {
-//   styleSheet.insertRule(keyframes, styleSheet.cssRules.length);
-// }

@@ -74,6 +74,25 @@ export default function PropertiesPanel({
         </div>
       </div>
 
+      <Section label="QUICK ACTIONS">
+  <Row>
+    <IconBtn onClick={onDuplicate}>
+      <Copy size={14}/>
+    </IconBtn>
+
+    <IconBtn onClick={onBringForward}>
+      ↑
+    </IconBtn>
+
+    <IconBtn onClick={onSendBackward}>
+      ↓
+    </IconBtn>
+
+    <IconBtn danger onClick={onDelete}>
+      <Trash2 size={14}/>
+    </IconBtn>
+  </Row>
+</Section>
       {/* TEXT */}
       <Section label="TEXT">
         <textarea
@@ -403,10 +422,18 @@ function IconBtn({ active, danger, onClick, children }) {
       onClick={onClick}
       style={{
         ...styles.iconBtn,
+
         background: active
-          ? "linear-gradient(135deg,#7c6af7,#9d8cff)"
-          : "rgba(255,255,255,0.05)",
-        border: danger ? "1px solid #ff4d6d" : "1px solid #2a2a35",
+          ? "linear-gradient(135deg,#7c6af7,#b16eff)"
+          : "rgba(255,255,255,.04)",
+
+        border: danger
+          ? "1px solid rgba(255,90,120,.5)"
+          : "1px solid rgba(255,255,255,.08)",
+
+        boxShadow: active
+          ? "0 12px 30px rgba(124,106,247,.4)"
+          : "none",
       }}
     >
       {children}
@@ -418,136 +445,274 @@ function IconBtn({ active, danger, onClick, children }) {
 
 const styles = {
   panel: {
-  padding: 18,
-  color: "#fff",
-  height: "100%",
-  overflowY: "auto",
+    height: "100%",
+    overflowY: "auto",
+    padding: 20,
 
-  background:
-    "linear-gradient(180deg,#151521,#0f0f18)",
+    background: `
+      radial-gradient(
+        circle at top,
+        rgba(124,106,247,.18),
+        transparent 40%
+      ),
+      linear-gradient(
+        180deg,
+        #141420 0%,
+        #0d0d14 100%
+      )
+    `,
 
-  boxShadow:
-    "inset 0 0 30px rgba(255,255,255,0.03)",
+    color: "#fff",
 
-  backdropFilter: "blur(30px)",
-},
+    borderLeft:
+      "1px solid rgba(255,255,255,.05)",
+
+    backdropFilter: "blur(40px)",
+
+    boxShadow: `
+      inset 0 1px 0 rgba(255,255,255,.04),
+      inset 0 0 80px rgba(124,106,247,.06)
+    `,
+  },
 
   header: {
     display: "flex",
     justifyContent: "space-between",
-    marginBottom: 14,
+    alignItems: "center",
+
+    marginBottom: 20,
+
+    paddingBottom: 14,
+
+    borderBottom:
+      "1px solid rgba(255,255,255,.06)",
   },
 
   headerTitle: {
     display: "flex",
     alignItems: "center",
-    gap: 6,
-    fontWeight: 600,
+    gap: 8,
+
+    fontSize: 16,
+    fontWeight: 700,
+
+    color: "#fff",
   },
 
   headerBtns: {
     display: "flex",
-    gap: 6,
+    gap: 8,
   },
 
- section: {
-  marginBottom: 20,
-  padding: 12,
+  section: {
+    marginBottom: 16,
 
-  background:
-    "rgba(255,255,255,0.03)",
+    padding: 14,
 
-  border:
-    "1px solid rgba(255,255,255,0.05)",
+    borderRadius: 18,
 
-  borderRadius: 12,
-},
+    background:
+      "rgba(255,255,255,.03)",
+
+    border:
+      "1px solid rgba(255,255,255,.06)",
+
+    backdropFilter: "blur(20px)",
+
+    boxShadow: `
+      inset 0 1px 0 rgba(255,255,255,.04),
+      0 10px 30px rgba(0,0,0,.25)
+    `,
+  },
 
   label: {
     fontSize: 10,
-    opacity: 0.6,
-    marginBottom: 6,
-    letterSpacing: "0.1em",
+    fontWeight: 700,
+
+    letterSpacing: ".18em",
+
+    color: "#8c8ca5",
+
+    marginBottom: 12,
   },
 
   row: {
     display: "flex",
-    gap: 8,
     alignItems: "center",
+
+    gap: 10,
+
+    marginTop: 10,
   },
 
-textarea: {
-  width: "100%",
-  minHeight: 100,
+  textarea: {
+    width: "100%",
+    minHeight: 110,
 
-  background: "#0d0d14",
+    resize: "vertical",
 
-  border:
-    "1px solid rgba(255,255,255,0.08)",
+    padding: 14,
 
-  color: "#fff",
+    color: "#fff",
 
-  padding: 10,
+    borderRadius: 14,
 
-  borderRadius: 10,
+    background:
+      "rgba(255,255,255,.03)",
 
-  resize: "vertical",
-},
+    border:
+      "1px solid rgba(255,255,255,.08)",
+
+    outline: "none",
+
+    fontSize: 14,
+
+    lineHeight: 1.6,
+  },
 
   select: {
     width: "100%",
-    padding: 6,
-    background: "#111",
-    border: "1px solid #2a2a35",
+    height: 42,
+
+    padding: "0 12px",
+
+    borderRadius: 12,
+
     color: "#fff",
-    borderRadius: 6,
+
+    background:
+      "rgba(255,255,255,.03)",
+
+    border:
+      "1px solid rgba(255,255,255,.08)",
+
+    outline: "none",
   },
 
   input: {
     flex: 1,
-    padding: 6,
-    background: "#111",
-    border: "1px solid #2a2a35",
+
+    height: 40,
+
+    padding: "0 12px",
+
+    borderRadius: 12,
+
     color: "#fff",
-    borderRadius: 6,
+
+    background:
+      "rgba(255,255,255,.03)",
+
+    border:
+      "1px solid rgba(255,255,255,.08)",
+
+    outline: "none",
   },
 
   slider: {
     flex: 1,
+
+    accentColor: "#8b5cf6",
+
+    cursor: "pointer",
   },
 
   color: {
     width: "100%",
-    height: 36,
+    height: 44,
+
     border: "none",
-    background: "none",
+
+    borderRadius: 12,
+
+    overflow: "hidden",
+
+    background: "transparent",
+
+    cursor: "pointer",
   },
 
   iconBtn: {
-    padding: 6,
-    borderRadius: 6,
-    cursor: "pointer",
+    width: 42,
+    height: 42,
+
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+
+    borderRadius: 14,
+
+    background:
+      "rgba(255,255,255,.04)",
+
+    border:
+      "1px solid rgba(255,255,255,.08)",
+
     color: "#fff",
+
+    cursor: "pointer",
+
+    transition: "all .25s ease",
+
+    backdropFilter: "blur(10px)",
+
+    boxShadow: `
+      inset 0 1px 0 rgba(255,255,255,.05)
+    `,
   },
 
   smallBtn: {
     flex: 1,
-    padding: 6,
-    background: "#1a1a22",
-    border: "1px solid #2a2a35",
+
+    height: 40,
+
+    borderRadius: 12,
+
+    border:
+      "1px solid rgba(255,255,255,.08)",
+
+    background:
+      "rgba(255,255,255,.04)",
+
     color: "#fff",
-    borderRadius: 6,
+
+    fontWeight: 600,
+
     cursor: "pointer",
+
+    transition: ".25s",
   },
 
   empty: {
-    padding: 30,
-    textAlign: "center",
-    opacity: 0.6,
+    height: "100%",
+
+    display: "flex",
+    flexDirection: "column",
+
+    justifyContent: "center",
+    alignItems: "center",
+
+    gap: 12,
+
+    color: "#9ca3af",
   },
 
   emptyIcon: {
-    fontSize: 28,
-    marginBottom: 10,
+    width: 70,
+    height: 70,
+
+    borderRadius: 20,
+
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+
+    fontSize: 30,
+
+    background:
+      "linear-gradient(135deg,#7c6af7,#b16eff)",
+
+    boxShadow:
+      "0 15px 40px rgba(124,106,247,.45)",
   },
 };
